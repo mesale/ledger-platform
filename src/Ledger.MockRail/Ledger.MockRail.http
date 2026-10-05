@@ -1,0 +1,6 @@
+@Ledger.MockRail_HostAddress = http://localhost:5160
+
+GET {{Ledger.MockRail_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
