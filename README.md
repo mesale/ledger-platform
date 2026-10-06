@@ -51,7 +51,7 @@ Full design detail — database schema, entity relationships, the saga state mac
 ### Setup
 
 ```bash
-git clone https://github.com/<org-or-user>/ledger-platform.git
+git clone https://github.com/mesale/ledger-platform.git
 cd ledger-platform
 
 # copy the env template and fill in local values
