@@ -1,6 +1,6 @@
 # Ledger Platform
 
-[![CI](https://github.com/<org-or-user>/ledger-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/<org-or-user>/ledger-platform/actions/workflows/ci.yml)
+[![CI](https://github.com/mesale/ledger-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mesale/ledger-platform/actions/workflows/ci.yml)
 ![Branch](https://img.shields.io/badge/branch-main-blue)
 ![Projects](https://img.shields.io/badge/projects-5-8A2BE2)
 ![.NET](https://img.shields.io/badge/.NET-9-512BD4)
