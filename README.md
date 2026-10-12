@@ -7,8 +7,6 @@
 
 A double-entry financial ledger and payments backend built with ASP.NET Core, designed to mirror how a real fintech team builds and ships this kind of system: strict correctness guarantees, idempotent and resilient payment flows, and a full CI/CD and observability pipeline behind it.
 
-This is a learning/portfolio project built collaboratively to practice professional full-stack and DevOps workflows, not a production payments system — no real money or real external rails are involved.
-
 ## What it does
 
 - Maintains accounts and a double-entry ledger where every transaction's debits always equal its credits, enforced as a domain invariant
@@ -20,7 +18,7 @@ This is a learning/portfolio project built collaboratively to practice professio
 
 ## Architecture
 
-The system is a **modular monolith**, not microservices — the ledger, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
+The system is a **modular monolith**, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
 
 Internally, the backend follows **Clean Architecture** (`Domain` → `Application` → `Infrastructure` → `Api`, dependencies pointing inward only) with **CQRS via MediatR** separating writes from reads.
 
