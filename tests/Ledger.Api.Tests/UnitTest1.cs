@@ -1,4 +1,4 @@
-﻿namespace Ledger.Api.Tests;
+namespace Ledger.Api.Tests;
 
 public class UnitTest1
 {
