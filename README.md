@@ -24,7 +24,7 @@ The system is a **modular monolith**, not microservices — the ledger, saga orc
 
 Internally, the backend follows **Clean Architecture** (`Domain` → `Application` → `Infrastructure` → `Api`, dependencies pointing inward only) with **CQRS via MediatR** separating writes from reads.
 
-Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](https://claude.ai/code/artifact/4295a9d7-8789-45cf-8566-47013fc76c15).
+Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](./docs/Ledger-Platform-Design-Document.docx).
 
 ## Tech stack
 
@@ -99,7 +99,7 @@ Key rules to keep in mind:
 - PRs should be small and focused (< 400 lines)
 - At least one review required before merging
 - CI (build, test, format) must pass before a PR can merge
-- See the design doc's task board for the current stage and open work
+- See the [design document's](./docs/Ledger-Platform-Design-Document.docx) task board for the current stage and open work
 
 ## License
 
