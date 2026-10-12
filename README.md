@@ -7,8 +7,6 @@
 
 A double-entry financial ledger and payments backend built with ASP.NET Core, designed to mirror how a real fintech team builds and ships this kind of system: strict correctness guarantees, idempotent and resilient payment flows, and a full CI/CD and observability pipeline behind it.
 
-This is a learning/portfolio project built collaboratively to practice professional full-stack and DevOps workflows, not a production payments system — no real money or real external rails are involved.
-
 ## What it does
 
 - Maintains accounts and a double-entry ledger where every transaction's debits always equal its credits, enforced as a domain invariant
@@ -20,11 +18,11 @@ This is a learning/portfolio project built collaboratively to practice professio
 
 ## Architecture
 
-The system is a **modular monolith**, not microservices — the ledger, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
+The system is a **modular monolith**, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
 
 Internally, the backend follows **Clean Architecture** (`Domain` → `Application` → `Infrastructure` → `Api`, dependencies pointing inward only) with **CQRS via MediatR** separating writes from reads.
 
-Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](https://claude.ai/code/artifact/4295a9d7-8789-45cf-8566-47013fc76c15).
+Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](./docs/Ledger-Platform-Design-Document.docx).
 
 ## Tech stack
 
@@ -89,12 +87,17 @@ infra/                      # Terraform, deployment manifests
 docs/                       # architecture notes, runbooks
 ```
 
-## Contributing (just the two of us, for now)
+## Contributing
 
+Please see our comprehensive [Contributing Guide](./CONTRIBUTING.md) for branch naming rules, setup instructions, code styling based on `.editorconfig`, PR guidelines, and definition of done.
+
+Key rules to keep in mind:
 - All changes go through a pull request into `main` — no direct pushes
+- Strict 1 PR = 1 Issue rule
+- PRs should be small and focused (< 400 lines)
 - At least one review required before merging
-- CI (build + test) must pass before a PR can merge
-- See the design doc's task board for the current stage and open work
+- CI (build, test, format) must pass before a PR can merge
+- See the [design document's](./docs/Ledger-Platform-Design-Document.docx) task board for the current stage and open work
 
 ## License
 

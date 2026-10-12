@@ -1,4 +1,4 @@
-﻿namespace Ledger.MockRail.Tests;
+namespace Ledger.MockRail.Tests;
 
 public class UnitTest1
 {

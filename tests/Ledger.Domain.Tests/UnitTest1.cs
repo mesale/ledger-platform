@@ -1,4 +1,4 @@
-﻿namespace Ledger.Domain.Tests;
+namespace Ledger.Domain.Tests;
 
 public class UnitTest1
 {
