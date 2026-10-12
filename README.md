@@ -89,11 +89,16 @@ infra/                      # Terraform, deployment manifests
 docs/                       # architecture notes, runbooks
 ```
 
-## Contributing (just the two of us, for now)
+## Contributing
 
+Please see our comprehensive [Contributing Guide](./CONTRIBUTING.md) for branch naming rules, setup instructions, code styling based on `.editorconfig`, PR guidelines, and definition of done.
+
+Key rules to keep in mind:
 - All changes go through a pull request into `main` — no direct pushes
+- Strict 1 PR = 1 Issue rule
+- PRs should be small and focused (< 400 lines)
 - At least one review required before merging
-- CI (build + test) must pass before a PR can merge
+- CI (build, test, format) must pass before a PR can merge
 - See the design doc's task board for the current stage and open work
 
 ## License
