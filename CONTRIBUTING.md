@@ -384,4 +384,4 @@ As a financial ledger and payments system, the following engineering principles 
 ## Questions & Communication
 
 - For design discussions, open an issue labeled `discussion` or `question`.
-- For architectural reference and phase roadmaps, refer to the project [design document](./docs/Ledger-Platform-Design-Document.docx).
+- For architectural reference and phase roadmaps, refer to the project [design document](./docs/design-document.md).

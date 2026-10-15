@@ -22,7 +22,7 @@ The system is a **modular monolith**, saga orchestration, reconciliation, and fr
 
 Internally, the backend follows **Clean Architecture** (`Domain` → `Application` → `Infrastructure` → `Api`, dependencies pointing inward only) with **CQRS via MediatR** separating writes from reads.
 
-Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](./docs/Ledger-Platform-Design-Document.docx).
+Full design detail — database schema, entity relationships, the saga state machine, architecture decision records, and the stage-by-stage task board — lives in the project's [design document](./docs/design-document.md).
 
 ## Tech stack
 
@@ -97,7 +97,7 @@ Key rules to keep in mind:
 - PRs should be small and focused (< 400 lines)
 - At least one review required before merging
 - CI (build, test, format) must pass before a PR can merge
-- See the [design document's](./docs/Ledger-Platform-Design-Document.docx) task board for the current stage and open work
+- See the [design document's](./docs/design-document.md) task board for the current stage and open work
 
 ## License
 
