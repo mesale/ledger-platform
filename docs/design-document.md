@@ -115,14 +115,18 @@ The double-entry ledger is the heart of the system. Every transaction touches at
 
 - ledger_entries is append-only. Enforce this with application code and, optionally, database rules or permissions.
 - accounts carries a version column for optimistic concurrency. Balance-affecting writes use Serializable isolation first, measured and relaxed later if needed.
-- idempotency_keys stores a request hash so a reused key with a different body is rejected.
+- Idempotency is delivered in two steps. In Stage 1, `transactions.idempotency_key` has a unique index; a repeated key returns the original transaction, and a unique violation from a concurrent duplicate is resolved by returning the existing row. In Stage 2, the `idempotency_keys` table is added; it stores a request hash (so a reused key with a different body is rejected) and the original response for replay.
 - outbox_messages has a processed_at column; the relay publishes unprocessed rows in order.
 
 ## 5. Key Mechanisms
 
 ### 5.1 Idempotency
 
-Every mutating endpoint accepts an Idempotency-Key header. Middleware looks the key up (Redis first, Postgres as source of truth). A duplicate returns the stored original response. Concurrent duplicates are serialised by a unique constraint so only one wins.
+Every balance-altering endpoint requires an Idempotency-Key header; a request without one is rejected with 400.
+ 
+**Stage 1.** The key is stored on the transaction behind a unique index. A duplicate returns the original result and creates no second transaction. Concurrent duplicates are serialised by the unique constraint, so only one wins and the other returns the winner's result.
+ 
+**Stage 2.** Middleware looks the key up (Redis first, Postgres as source of truth), compares a hash of the request body so a reused key with a different body is rejected, and replays the stored original response.
 
 ### 5.2 Atomic posting
 
