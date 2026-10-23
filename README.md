@@ -18,7 +18,7 @@ A double-entry financial ledger and payments backend built with ASP.NET Core, de
 
 ## Architecture
 
-The system is a **modular monolith**, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
+The system is a **modular monolith**: the ledger, saga orchestration, reconciliation, and fraud rules all live in one deployable application sharing one database, so balance-affecting operations get real ACID guarantees instead of distributed-transaction complexity. The one deliberate exception is the **mocked external rail**, a genuinely separate service used to practice real cross-service failure handling (timeouts, retries, sagas) without needing an actual bank integration.
 
 Internally, the backend follows **Clean Architecture** (`Domain` → `Application` → `Infrastructure` → `Api`, dependencies pointing inward only) with **CQRS via MediatR** separating writes from reads.
 
