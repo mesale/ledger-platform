@@ -107,4 +107,21 @@ public class MoneyTests
             () => new Money(5m, "USD") - new Money(1m, "EUR"));
     }
 
+    [Fact]
+    public void Equality_IgnoresTrailingZeros()
+    {
+        Assert.Equal(new Money(1.0m, "USD"), new Money(1.00m, "USD"));
+    }
+
+    [Fact]
+    public void Equality_DifferentCurrencyIsNotEqual()
+    {
+        Assert.NotEqual(new Money(1m, "USD"), new Money(1m, "EUR"));
+    }
+
+    [Fact]
+    public void Equality_DifferentAmountIsNotEqual()
+    {
+        Assert.NotEqual(new Money(1m, "USD"), new Money(2m, "USD"));
+    }
 }
