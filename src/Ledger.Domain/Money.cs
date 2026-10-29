@@ -31,4 +31,31 @@ public sealed record class Money
 
         return code;
     }
+
+    public static Money operator +(Money left, Money right)
+    {
+        EnsureSameCurrency(left, right);
+
+        return new Money(left.Amount + right.Amount, left.Currency);
+    }
+
+    public static Money operator -(Money left, Money right)
+    {
+        EnsureSameCurrency(left, right);
+
+        if (left.Amount < right.Amount)
+        {
+            throw new InvalidOperationException("Cannot subtract a larger amount from a smaller amount.");
+        }
+
+        return new Money(left.Amount - right.Amount, left.Currency);
+    }
+
+    private static void EnsureSameCurrency(Money left, Money right)
+    {
+        if (left.Currency != right.Currency)
+        {
+            throw new CurrencyMismatchException(left.Currency, right.Currency);
+        }
+    }
 }
