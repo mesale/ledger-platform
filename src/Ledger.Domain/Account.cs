@@ -34,4 +34,33 @@ public sealed class Account
         Status = AccountStatus.Active; // Default status is Active
         CreatedAt = createdAt;
     }
+    public void Freeze()
+    {
+        if (Status != AccountStatus.Active)
+        {
+            throw new InvalidOperationException($"Cannot freeze an account that is {Status}.");
+        }
+
+        Status = AccountStatus.Frozen;
+    }
+
+    public void Unfreeze()
+    {
+        if (Status != AccountStatus.Frozen)
+        {
+            throw new InvalidOperationException($"Cannot unfreeze an account that is {Status}.");
+        }
+
+        Status = AccountStatus.Active;
+    }
+
+    public void Close()
+    {
+        if (Status == AccountStatus.Closed)
+        {
+            throw new InvalidOperationException("Account is already closed.");
+        }
+
+        Status = AccountStatus.Closed;
+    }
 }
