@@ -14,4 +14,22 @@ public class MoneyTests
         Assert.Equal("USD", money.Currency);
     }
 
+    [Theory]
+    [InlineData(-0.01)]
+    [InlineData(-1)]
+    [InlineData(-1000.50)]
+    public void Constractor_RejectsNegativeAmount(double raw)
+    {
+        var amount = (decimal)raw;
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Money(amount, "USD"));
+    }
+
+    [Fact]
+    public void Constructor_AllowsZero()
+    {
+        var money = new Money(0m, "USD");
+        Assert.Equal(0m, money.Amount);
+    }
+
 }
