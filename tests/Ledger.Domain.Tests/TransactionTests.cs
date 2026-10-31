@@ -28,6 +28,16 @@ public class TransactionTests
     private static Transaction Create(Guid id, params LedgerEntry[] entries) =>
         new(id, null, DateTimeOffset.UtcNow, entries);
 
+    private static Transaction NewPendingTransaction()
+    {
+        var id = Guid.NewGuid();
+        return new Transaction(id, null, DateTimeOffset.UtcNow, new[]
+        {
+            Entry(id, Direction.Debit, 10m),
+            Entry(id, Direction.Credit, 10m)
+        });
+    }
+
     [Fact]
     public void Constructor_RejectsEmptyId()
     {
@@ -102,6 +112,86 @@ public class TransactionTests
         }
 
         Assert.Throws<ArgumentException>(() => new Transaction(id, key, DateTimeOffset.UtcNow, entries));
+    }
+
+    [Fact]
+    public void Post_FromPending_SetsPosted()
+    {
+        var transaction = NewPendingTransaction();
+
+        transaction.Post();
+
+        Assert.Equal(TransactionStatus.Posted, transaction.Status);
+    }
+
+    [Fact]
+    public void Fail_FromPending_SetsFailed()
+    {
+        var transaction = NewPendingTransaction();
+
+        transaction.Fail();
+
+        Assert.Equal(TransactionStatus.Failed, transaction.Status);
+    }
+
+    [Fact]
+    public void Reverse_FromPosted_SetsReversed()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Post();
+
+        transaction.Reverse();
+
+        Assert.Equal(TransactionStatus.Reversed, transaction.Status);
+    }
+
+    [Fact]
+    public void Reverse_FromPending_Throws()
+    {
+        var transaction = NewPendingTransaction();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
+    }
+
+    [Fact]
+    public void Post_WhenAlreadyPosted_Throws()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Post();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Post());
+    }
+
+    [Fact]
+    public void Fail_WhenPosted_Throws()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Post();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Fail());
+    }
+
+    [Fact]
+    public void Failed_IsTerminal()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Fail();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Post());
+        Assert.Throws<InvalidOperationException>(() => transaction.Fail());
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
+    }
+
+    [Fact]
+    public void Reversed_IsTerminal()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Post();
+        transaction.Reverse();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Post());
+        Assert.Throws<InvalidOperationException>(() => transaction.Fail());
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
     }
 
 }

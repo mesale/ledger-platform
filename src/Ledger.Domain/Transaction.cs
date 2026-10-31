@@ -66,4 +66,34 @@ public class Transaction
         }
     }
 
+    public void Post()
+    {
+        if (Status != TransactionStatus.Pending)
+        {
+            throw new InvalidOperationException("Only pending transactions can be posted.");
+        }
+
+        Status = TransactionStatus.Posted;
+    }
+
+    public void Fail()
+    {
+        if (Status != TransactionStatus.Pending)
+        {
+            throw new InvalidOperationException("Only pending transactions can be failed.");
+        }
+
+        Status = TransactionStatus.Failed;
+    }
+
+    public void Reverse()
+    {
+        if (Status != TransactionStatus.Posted)
+        {
+            throw new InvalidOperationException("Only posted transactions can be reversed.");
+        }
+
+        Status = TransactionStatus.Reversed;
+    }
+
 }

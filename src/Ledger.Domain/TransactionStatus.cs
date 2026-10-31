@@ -5,5 +5,5 @@ public enum TransactionStatus
     Pending = 1,
     Posted = 2,
     Failed = 3,
-    Reserved = 4
+    Reversed = 4
 }
