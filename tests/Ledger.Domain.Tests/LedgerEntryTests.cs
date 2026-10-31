@@ -9,37 +9,46 @@ public class LedgerEntryTests
     [InlineData(Direction.Credit)]
     public void Constructor_CreatesEntryWithGivenValues(Direction direction)
     {
+        var id = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var transactionId = Guid.NewGuid();
 
-        var entry = new LedgerEntry(accountId, transactionId, direction, 12.34m, "USD");
+        var entry = new LedgerEntry(id, accountId, transactionId, direction, new Money(12.34m, "USD"));
 
+        Assert.Equal(id, entry.Id);
         Assert.Equal(accountId, entry.AccountId);
         Assert.Equal(transactionId, entry.TransactionId);
         Assert.Equal(direction, entry.Direction);
-        Assert.Equal(12.34m, entry.Amount);
-        Assert.Equal("USD", entry.Currency);
+        Assert.Equal(12.34m, entry.Money.Amount);
+        Assert.Equal("USD", entry.Money.Currency);
+    }
+
+    [Fact]
+    public void Constructor_RejectsEmptyId()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new LedgerEntry(Guid.Empty, Guid.NewGuid(), Guid.NewGuid(), Direction.Debit, new Money(1m, "USD")));
     }
 
     [Fact]
     public void Constructor_RejectsEmptyAccountId()
     {
         Assert.Throws<ArgumentException>(() =>
-            new LedgerEntry(Guid.Empty, Guid.NewGuid(), Direction.Debit, 1m, "USD"));
+            new LedgerEntry(Guid.NewGuid(), Guid.Empty, Guid.NewGuid(), Direction.Debit, new Money(1m, "USD")));
     }
 
     [Fact]
     public void Constructor_RejectsEmptyTransactionId()
     {
         Assert.Throws<ArgumentException>(() =>
-            new LedgerEntry(Guid.NewGuid(), Guid.Empty, Direction.Debit, 1m, "USD"));
+            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, Direction.Debit, new Money(1m, "USD")));
     }
 
     [Fact]
     public void Constructor_RejectsUndefinedDirection()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), (Direction)99, 1m, "USD"));
+            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), (Direction)99, new Money(1m, "USD")));
     }
 
     [Theory]
@@ -51,7 +60,7 @@ public class LedgerEntryTests
         var amount = (decimal)rawAmount;
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Direction.Debit, amount, "USD"));
+            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Direction.Debit, new Money(amount, "USD")));
     }
 
     [Theory]
@@ -64,15 +73,15 @@ public class LedgerEntryTests
     public void Constructor_RejectsInvalidCurrency(string? currency)
     {
         Assert.Throws<ArgumentException>(() =>
-            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Direction.Debit, 1m, currency!));
+            new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Direction.Debit, new Money(1m, currency!)));
     }
 
     [Fact]
     public void Constructor_NormalizesCurrency()
     {
-        var entry = new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Direction.Credit, 1m, " usd ");
+        var entry = new LedgerEntry(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Direction.Credit, new Money(1m, " usd "));
 
-        Assert.Equal("USD", entry.Currency);
+        Assert.Equal("USD", entry.Money.Currency);
     }
 
     [Fact]
