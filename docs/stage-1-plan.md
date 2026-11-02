@@ -46,8 +46,8 @@ No dependencies on EF Core, ASP.NET or any framework. Each issue includes its ow
 - [ ] `Account` entity with `AccountType` (Asset, Liability, System) and status (active, frozen, closed)
 - [ ] Immutable `LedgerEntry` with `Direction` (Debit, Credit), positive amount and currency
 - [ ] `Transaction` aggregate: at least two entries, single currency, debits equal credits, `LedgerInvariantException` otherwise; carries an optional idempotency key
-- [ ] Transaction status transitions (pending to posted or failed, posted to reversed); illegal transitions rejected
-- [ ] Reversal as new balancing entries; posted entries never edited or deleted
+- [ ] Transaction status transitions (pending to posted or failed); illegal transitions rejected
+- [ ] Reversal as a new posted transaction with opposing balancing entries and a reference to the unchanged original
 - [ ] Property-based tests (FsCheck): random valid sets always balance; random tampered sets are always rejected
 - [ ] Remove the placeholder `UnitTest1.cs` files
 
