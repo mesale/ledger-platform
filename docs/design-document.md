@@ -108,7 +108,7 @@ The double-entry ledger is the heart of the system. Every transaction touches at
 | Money           | Decimal amount and ISO currency; never floating point. Arithmetic requires matching currencies.                     |
 | Account         | Belongs to a user or is a system account (external funding, platform revenue, suspense, reservation). Has a currency, type (Asset, Liability, System) and status (active, frozen, closed). |
 | LedgerEntry     | Immutable row: account, amount, direction (debit or credit), transaction id, timestamp.                                |
-| Transaction     | Groups a balanced set of entries. Status: pending, posted, failed, reversed.                                           |
+| Transaction     | Groups a balanced set of entries. Status: pending, posted or failed. A reversal is a new posted transaction linked to the original. |
 | Transfer        | User-facing request to send money from A to B. Results in one or more transactions.                                    |
 | Idempotency key | Required for every balance-altering request; transaction key in Stage 1, request hash and stored response in Stage 2.   |
 | Outbox message  | From Stage 2, an event written in the same database transaction as the ledger entries.                                  |
@@ -117,6 +117,7 @@ The double-entry ledger is the heart of the system. Every transaction touches at
 
 - Every transaction has at least two entries in one currency, and the sum of debits equals the sum of credits.
 - Posted ledger entries are immutable.
+- Reversals append a new posted transaction with opposing entries; the original transaction remains unchanged.
 - No account balance goes negative where the account type disallows it.
 - A repeated request with the same idempotency key never creates a second transfer.
 - Every domain event is published at least once and consumers are idempotent.

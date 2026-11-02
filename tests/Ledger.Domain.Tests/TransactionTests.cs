@@ -20,6 +20,7 @@ public class TransactionTests
 
         Assert.Equal(id, transaction.Id);
         Assert.Equal("key-1", transaction.IdempotencyKey);
+        Assert.Null(transaction.ReversesTransactionId);
         Assert.Equal(TransactionStatus.Pending, transaction.Status);
         Assert.Equal(createdAt, transaction.CreatedAt);
         Assert.Equal(2, transaction.Entries.Count);
@@ -135,14 +136,99 @@ public class TransactionTests
     }
 
     [Fact]
-    public void Reverse_FromPosted_SetsReversed()
+    public void Reverse_FromPosted_CreatesDistinctPostedTransactionWithOppositeEntries()
     {
-        var transaction = NewPendingTransaction();
-        transaction.Post();
+        var originalId = Guid.NewGuid();
+        var debitAccountId = Guid.NewGuid();
+        var creditAccountId = Guid.NewGuid();
+        var originalEntries = new[]
+        {
+            new LedgerEntry(Guid.NewGuid(), debitAccountId, originalId, Direction.Debit, new Money(10m, "USD")),
+            new LedgerEntry(Guid.NewGuid(), creditAccountId, originalId, Direction.Credit, new Money(10m, "USD"))
+        };
+        var original = new Transaction(originalId, "original-key", DateTimeOffset.UtcNow, originalEntries);
+        original.Post();
+        var reversalId = Guid.NewGuid();
+        var reversalEntryIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var reversedAt = new DateTimeOffset(2026, 11, 2, 10, 0, 0, TimeSpan.Zero);
 
-        transaction.Reverse();
+        var reversal = original.Reverse(reversalId, "reversal-key", reversedAt, reversalEntryIds);
 
-        Assert.Equal(TransactionStatus.Reversed, transaction.Status);
+        Assert.NotSame(original, reversal);
+        Assert.Equal(reversalId, reversal.Id);
+        Assert.Equal("reversal-key", reversal.IdempotencyKey);
+        Assert.Equal(original.Id, reversal.ReversesTransactionId);
+        Assert.Equal(TransactionStatus.Posted, reversal.Status);
+        Assert.Equal(reversedAt, reversal.CreatedAt);
+        Assert.Collection(
+            reversal.Entries,
+            entry =>
+            {
+                Assert.Equal(reversalEntryIds[0], entry.Id);
+                Assert.Equal(debitAccountId, entry.AccountId);
+                Assert.Equal(reversalId, entry.TransactionId);
+                Assert.Equal(Direction.Credit, entry.Direction);
+                Assert.Equal(new Money(10m, "USD"), entry.Money);
+            },
+            entry =>
+            {
+                Assert.Equal(reversalEntryIds[1], entry.Id);
+                Assert.Equal(creditAccountId, entry.AccountId);
+                Assert.Equal(reversalId, entry.TransactionId);
+                Assert.Equal(Direction.Debit, entry.Direction);
+                Assert.Equal(new Money(10m, "USD"), entry.Money);
+            });
+    }
+
+    [Fact]
+    public void Reverse_LeavesOriginalTransactionAndEntriesUnchanged()
+    {
+        var original = NewPendingTransaction();
+        original.Post();
+        var originalEntries = original.Entries.ToArray();
+
+        _ = original.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            original.Entries.Select(_ => Guid.NewGuid()).ToArray());
+
+        Assert.Equal(TransactionStatus.Posted, original.Status);
+        Assert.Null(original.ReversesTransactionId);
+        Assert.Equal(originalEntries, original.Entries);
+    }
+
+    [Fact]
+    public void Reverse_IsBalancedAndNetsOriginalAccountMovementsToZero()
+    {
+        var transactionId = Guid.NewGuid();
+        var firstAccountId = Guid.NewGuid();
+        var secondAccountId = Guid.NewGuid();
+        var thirdAccountId = Guid.NewGuid();
+        var original = Create(
+            transactionId,
+            new LedgerEntry(Guid.NewGuid(), firstAccountId, transactionId, Direction.Debit, new Money(60m, "USD")),
+            new LedgerEntry(Guid.NewGuid(), secondAccountId, transactionId, Direction.Debit, new Money(40m, "USD")),
+            new LedgerEntry(Guid.NewGuid(), thirdAccountId, transactionId, Direction.Credit, new Money(100m, "USD")));
+        original.Post();
+
+        var reversal = original.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            original.Entries.Select(_ => Guid.NewGuid()).ToArray());
+
+        Assert.Equal(
+            reversal.Entries.Where(entry => entry.Direction == Direction.Debit).Sum(entry => entry.Money.Amount),
+            reversal.Entries.Where(entry => entry.Direction == Direction.Credit).Sum(entry => entry.Money.Amount));
+
+        var netMovements = original.Entries
+            .Concat(reversal.Entries)
+            .GroupBy(entry => entry.AccountId)
+            .Select(group => group.Sum(entry =>
+                entry.Direction == Direction.Debit ? entry.Money.Amount : -entry.Money.Amount));
+
+        Assert.All(netMovements, amount => Assert.Equal(0m, amount));
     }
 
     [Fact]
@@ -150,7 +236,37 @@ public class TransactionTests
     {
         var transaction = NewPendingTransaction();
 
-        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            transaction.Entries.Select(_ => Guid.NewGuid()).ToArray()));
+    }
+
+    [Fact]
+    public void Reverse_FromFailed_Throws()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Fail();
+
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            transaction.Entries.Select(_ => Guid.NewGuid()).ToArray()));
+    }
+
+    [Fact]
+    public void Reverse_RejectsOriginalEntryIds()
+    {
+        var transaction = NewPendingTransaction();
+        transaction.Post();
+
+        Assert.Throws<ArgumentException>(() => transaction.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            transaction.Entries.Select(entry => entry.Id).ToArray()));
     }
 
     [Fact]
@@ -179,19 +295,27 @@ public class TransactionTests
 
         Assert.Throws<InvalidOperationException>(() => transaction.Post());
         Assert.Throws<InvalidOperationException>(() => transaction.Fail());
-        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
+        Assert.Throws<InvalidOperationException>(() => transaction.Reverse(
+            Guid.NewGuid(),
+            "reversal-key",
+            DateTimeOffset.UtcNow,
+            transaction.Entries.Select(_ => Guid.NewGuid()).ToArray()));
     }
 
     [Fact]
-    public void Reversed_IsTerminal()
+    public void Constructor_CopiesEntryCollection()
     {
-        var transaction = NewPendingTransaction();
-        transaction.Post();
-        transaction.Reverse();
+        var id = Guid.NewGuid();
+        var entries = new List<LedgerEntry>
+        {
+            Entry(id, Direction.Debit, 10m),
+            Entry(id, Direction.Credit, 10m)
+        };
+        var transaction = new Transaction(id, null, DateTimeOffset.UtcNow, entries);
 
-        Assert.Throws<InvalidOperationException>(() => transaction.Post());
-        Assert.Throws<InvalidOperationException>(() => transaction.Fail());
-        Assert.Throws<InvalidOperationException>(() => transaction.Reverse());
+        entries.Clear();
+
+        Assert.Equal(2, transaction.Entries.Count);
     }
 
 }
